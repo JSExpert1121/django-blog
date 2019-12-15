@@ -1,5 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AbstractBaseUser
+from django.conf import settings
+
+from datetime import datetime, timedelta
+import jwt
+import secrets
 
 # Create your models here.
 
@@ -50,16 +55,18 @@ class User(AbstractBaseUser):
         max_length=64, blank=False, null=False, verbose_name='First Name')
     last_name = models.CharField(
         max_length=64, blank=False, null=False, verbose_name='Last Name')
-    email = models.EmailField(blank=False, unique=True)
+    email = models.EmailField(db_index=True, blank=False, unique=True)
     date_joined = models.DateTimeField(
         verbose_name='date joined', auto_now_add=True)
     last_login = models.DateTimeField(verbose_name='last login', auto_now=True)
     role = models.CharField(max_length=16, default='worker')
+
+    is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
 
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ('first_name', 'last_name',)
 
     objects = UserManager()
 
@@ -82,3 +89,30 @@ class User(AbstractBaseUser):
     @property
     def username(self):
         return self.get_full_name()
+
+    def _generate_access_token(self):
+        '''
+        generate token for authentication
+        expired time: 15 mins
+        '''
+        cur_time = datetime.now() + timedelta(minutes=15)
+
+        token = jwt.encode({
+            "id": self.pk,
+            "expired": '{}'.format(cur_time),
+        }, key=settings.JWT_SECRETE_KEY, algorithm='HS256')
+
+        return token.decode('utf-8')
+
+    def _generate_refresh_token(self):
+        return jwt.encode({
+            "id": self.pk
+        }, key=settings.JWT_SECRETE_KEY, algorithm='HS256').decode('utf-8')
+
+    @property
+    def access_token(self):
+        return self._generate_access_token()
+
+    @property
+    def refresh_token(self):
+        return self._generate_refresh_token()
