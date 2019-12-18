@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ title }}
+{% endblock title %}
+
+
+{% block content %}
+
+<div class='container p-4 max-720 text-center'>
+    <h3 class='py-3'>{{ title }}</h3>
+    <p>Thank you {{ username }} for joining our blog! Please verify your mail by clicking below button</p>
+    <a href="{{ client }}/account/verifymail?sec_token={{ sec_token }}" class='btn btn-primary mx-auto'>Verify
+        mail
+    </a>
+</div>
+
+{% endblock content %}

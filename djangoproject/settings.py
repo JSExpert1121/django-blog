@@ -24,6 +24,21 @@ SECRET_KEY = '(-1$5o3rv5c$9cy22+r!%@u&xbpdbmv=6^2bq3p%5*r%4u47k5'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Development only
+
+# EMAIL Setting
+CLIENT_URL = '127.0.0.1:3000'
+EMAIL_HOST = 'smtp.mailtrap.io'
+EMAIL_HOST_USER = 'd473e54de3e06f'
+EMAIL_HOST_PASSWORD = '695f575da9b89a'
+EMAIL_PORT = '2525'
+DEFAULT_FROM_EMAIL = 'admin@blog.com'
+
+# SMS Setting
+TWILIO_SID = 'AC597604fc31451eeb80effafd3efae869'
+TWILIO_AUTH_TOKEN = '8f3f23a22596f3bd35c4f8cfe133a5f0'
+ADMIN_PHONE = '8617152928090'
 
 ALLOWED_HOSTS = []
 
@@ -63,7 +78,7 @@ ROOT_URLCONF = 'djangoproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -115,6 +130,7 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTH_USER_MODEL = 'authentication.User'
 
 JWT_SECRETE_KEY = 'timeisgold'
+JWT_VERIFY_KEY = 'verify'
 
 REST_FRAMEWORK = {
     # 'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',

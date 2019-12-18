@@ -1,16 +1,18 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AbstractBaseUser
 from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-from datetime import datetime, timedelta
 import jwt
 import secrets
+from datetime import datetime, timedelta
 
-# Create your models here.
+from core.mailers import send_verification_mail
+from core.sms import send_verification_sms
+
 
 # Custom User Manager
-
-
 class UserManager(BaseUserManager):
 
     def create_user(self, email, first_name, last_name, password=None):
@@ -63,6 +65,8 @@ class User(AbstractBaseUser):
 
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
+    email_verified = models.BooleanField(default=False)
+    phone_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
 
@@ -116,3 +120,24 @@ class User(AbstractBaseUser):
     @property
     def refresh_token(self):
         return self._generate_refresh_token()
+
+
+@receiver(post_save, sender=User)
+def user_registered(sender, instance, **kwargs):
+    '''
+    send verification email once a user is created
+    '''
+    created = kwargs.get('created', False)
+    if not created:
+        return
+
+    cur_time = datetime.now() + timedelta(minutes=15)
+    token = jwt.encode({
+        "id": instance.pk,
+        "expired": '{}'.format(cur_time),
+    }, key=settings.JWT_VERIFY_KEY, algorithm='HS256')
+
+    send_verification_mail(token.decode(
+        'utf-8'), instance.email, instance.username)
+
+    send_verification_sms(120946, to='8617152928280')
